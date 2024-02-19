@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Button } from "./components/ui/button"
 import { Card } from "./components/ui/card"
 import { Input } from "./components/ui/input"
+import { escape } from "querystring"
 const buttonList = [
   "ダラダラ",
   "ワイワイ",
@@ -12,10 +13,28 @@ const buttonList = [
 
 
 function App() {
-
-  const [inputText, setInputText] = useState("");
+  function escapeRegExp(string: string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  const [inputText, setInputText] = useState<string>('');
   const changeInput = (e:React.ChangeEvent<HTMLInputElement>) => {
     setInputText(e.target.value);
+  };
+  const chainWord = (word: string) => {
+    if(inputText === '') {
+      setInputText(word)
+    } else {
+      setInputText(current => current + ', ' + word)
+    }
+  };
+  const delWord = (word: string) => {
+    setInputText(current => current.replace(word, ""));
+    setInputText(current => current.replace(" ,", ""));
+    setInputText(current => current.replace(new RegExp("^" + escapeRegExp(", "), "g"), ""));
+    setInputText(current => current.replace(new RegExp(escapeRegExp(", ") + "$", "g"), ""));
+  }
+  const isInclude = (word: string) => {
+    return inputText.includes(word);
   }
 
   return (
@@ -34,9 +53,10 @@ function App() {
         <div className="flex justify-around m-4">
           {buttonList.map((elem) => (
             <Button
-             onClick={() => {setInputText(elem)}}
+             onClick={!isInclude(elem) ? () => {chainWord(elem)} :() => {delWord(elem)}}
+            //  disabled={isInclude(elem)}
              key={elem}
-             className="bg-blue-800 rounded-full w-20 h-10"
+             className="w-20 h-10 bg-blue-800 rounded-full"
             >
               {elem}
             </Button>
